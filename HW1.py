@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import mpl_finance as mpf
 from matplotlib.dates import date2num
 import numpy as np
-import herst
+import herst #import loaded file herst.py
 import datetime as dt
 
 #region Select necessary data
@@ -55,14 +55,14 @@ print('Медиана доходности = {:.4f}%'.format((file['return_close
 returns = file['return_close'].values
 MA_returns = file['MA_return'].values
 
-herstes = []
+herstes = [] #create array hor herst coef
 for i in range(0, len(returns)): #file.index:
-    try:
-        h, c, data = herst.compute_Hc(returns[i-mov_avg_window:i],
+    try: #as the value error will occure
+        h, c, data = herst.compute_Hc(returns[i-mov_avg_window:i], #calculate herst coef
                                       kind='change',
                                       simplified=False
                                       )
-        herstes.append(h)
+        herstes.append(h) #add it to array
     except ValueError:
         continue
 
@@ -74,12 +74,12 @@ profits_momentum = []
 Sum_Return = 1
 for i in range(0, len(MA_returns)):
     if MA_returns[i] > 0:
-        profits_momentum.append(1 + returns[i])
+        profits_momentum.append(1 + returns[i]) #if mean(r) > 0, add profit into profits array
     if MA_returns[i] < 0:
-        profits_momentum.append(1 - returns[i])
+        profits_momentum.append(1 - returns[i]) #if mean(r) < 0, add profit into profits array with negative sign
 
 for i in range(0, len(profits_momentum)):
-    Sum_Return *= profits_momentum[i]
+    Sum_Return *= profits_momentum[i] #multiply all profits
 print('Momentum strategy return = {:.4f}%'.format((Sum_Return - 1)*100))
 
 #endregion
@@ -100,7 +100,7 @@ print('Mean reversion strategy return = {:.4f}%'.format((Sum_Return - 1)*100))
 
 #endregion
 
-#region Herst (use momentum or reversion)
+#region Herst (use momentum or reversion based on herst coef)
 
 profits_herst = []
 Sum_Return = 1
@@ -125,19 +125,21 @@ print('Herst strategy return = {:.4f}%'.format((Sum_Return - 1)*100))
 
 #region Cumulative return graph
 
-x = file['date'].values
+x = file['date'].values #create array of dates
+
+#reshape them as they are rows, not columns
 x = x.reshape(len(x), 1)
-y_buy_hold = []
 y_momentum = np.cumprod(np.array(profits_momentum))
 y_reversion = np.cumprod(np.array(profits_reversion))
 y_herst = np.cumprod(np.array(profits_herst))
 
+#construct graphs
 plt.plot(x, y_momentum, color='red', label='Momentum')
 plt.plot(x, y_reversion, color='green', label='Mean reversion')
 x_herst = x[mov_avg_window:]
 plt.plot(x_herst, y_herst, color='black', label='Herst')
-plt.grid()
-plt.legend()
+plt.grid() #add grid
+plt.legend() #add legend
 plt.show()
 
 #endregion
